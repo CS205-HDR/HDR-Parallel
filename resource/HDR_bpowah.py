@@ -1,4 +1,5 @@
 from PIL import Image
+import time
 import os, os.path
 import sys, string
 from copy import copy
@@ -33,8 +34,8 @@ class hdr:
             samp = img.resize((50,50))  #crop(box=((10,10,20,20)))
             drks.append(sum(samp.getdata(band=0)))
         if self.resize:
-            newsize = tuple([int(x*self.resize) for x in img.size])
-            imgs = [img.resize(newsize) for img in imgs]
+            # newsize = tuple([int(x*self.resize) for x in img.size])
+            imgs = [img.resize(tuple([int(x*self.resize) for x in img.size])) for img in imgs]
 
         newdrks = sorted(drks)
         idxs = [drks.index(x) for x in newdrks]
@@ -226,3 +227,9 @@ class hdr:
         else:
             val = [float(v) for v in val]
         return val
+
+if __name__ == '__main__':
+    start = time.time()
+    proj = hdr(case='test', resize=.5, img_type='jpg', cur_dir=r'/Users/Elena/Desktop/CS205/Final/HDR-Parallel')
+    proj.get_hdr(strength=[0.,1.,2.],naturalness=[0.8,0.9,1.0])
+    print 'Total time:', time.time() - start
