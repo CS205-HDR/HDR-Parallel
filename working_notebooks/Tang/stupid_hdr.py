@@ -1,6 +1,6 @@
 from PIL import Image
 import matplotlib.pyplot as plt
-%matplotlib inline
+import numpy as np
 
 im0 = Image.open("orig_0.jpg")
 im1 = Image.open("orig_1.jpg")
