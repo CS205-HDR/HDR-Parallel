@@ -18,4 +18,6 @@ id_comp2 = np.reshape(id_comp, (612,816,3)).astype(np.uint8)
 
 im_comp = Image.fromarray(id_comp2, 'RGB')
 
+print id_comp2[:20]
+
 im_comp.show()
