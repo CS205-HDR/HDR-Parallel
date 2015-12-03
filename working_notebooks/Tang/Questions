@@ -1,2 +1,7 @@
-1.Can local size be not 8*8 like 9*9?
-2. Why need local memory?
+1. Can local size be not 8*8 like 9*9?
+2. Use of local memory?
+3. Outside function in .cl file?
+4. Ways to enhance performance?
+5. Integrate approaches?
+
+6. print in .cl?
