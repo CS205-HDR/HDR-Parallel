@@ -102,14 +102,14 @@ if __name__ == '__main__':
     cl.enqueue_copy(queue, out, gpu_out, is_blocking=True)
 
     seconds = (event.profile.end - event.profile.start) / 1e9
-    print("{} Million Complex FMAs in {} seconds, {} million Complex FMAs / second".format(out.sum() / 1e6, seconds, (out.sum() / seconds) / 1e6))
+    print("Global mask performance: {} Million Complex FMAs in {} seconds, {} million Complex FMAs / second".format(out.sum() / 1e6, seconds, (out.sum() / seconds) / 1e6))
 
 
     id_comp2 = np.reshape(out, (img_size[1],img_size[0],3)).astype(np.uint8)
     print 'shape', id_comp2.shape
-    print id_comp2[:20]
+    # print id_comp2[:20]
     im_comp = Image.fromarray(id_comp2, 'RGB')
 
     print 'shape', id_comp2.shape
-    print id_comp2[:20]
+    # print id_comp2[:20]
     im_comp.show()
