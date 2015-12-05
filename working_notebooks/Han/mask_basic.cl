@@ -5,43 +5,6 @@
 // This is the mask calculation version
 
 
-float get_right_pix(__global __read_only float *labels,
-           int w, int h,
-           int x, int y);
-
-// for given point in buffer, make sure it is within bounds of workgroup
-
-//float get_right_pix(__global __read_only float *gpu_in,
-//           int w, int h,
-//           int curr_x, int curr_y) {
-//    if (curr_x < 0) {
-//        curr_x = 0;
-//    }
-//    if (curr_x > w-1) {
-//        curr_x = w-1;
-//    }
-//    if (curr_y < 0) {
-//        curr_y = 0;
-//    }
-//    if (curr_y > h-1) {
-//        curr_y = h-1;
-//    }
-//    return gpu_in[curr_y * w + curr_x];
-//}
-
-float
-get_right_pix(__global __read_only float *gpu_in,
-                  int w, int h,
-                  int x, int y)
-{
-    if ((x < 0) || (x >= w) || (y < 0) || (y >= h))
-        return w * h;
-    return gpu_in[y * w + x];
-}
-
-
-
-
 
 __kernel void
 mask_nobuffer(__global __read_only float *gpu_in,

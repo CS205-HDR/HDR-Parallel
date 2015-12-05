@@ -1,0 +1,31 @@
+
+This is the results for comparisons.
+
+Using test_large.jpg (3648, 5472):
+
+Running time for mask_basic per pixel with no buffer:
+0.66834488
+
+Running time for mask using buffer but accessing mask matrix globally:
+0.66774984
+
+Running time for mask_imp using buffer and accessing mask matrix locally:
+0.23435896
+
+
+
+
+Using test.jpg (205, 236):
+
+Running time for mask_basic per pixel with no buffer:
+0.00355416
+
+Running time for mask using buffer but accessing mask matrix globally:
+0.00349768
+
+Running time for mask_imp using buffer and accessing mask matrix local
+0.00096352
+
+
+
+
