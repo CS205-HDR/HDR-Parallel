@@ -6,34 +6,25 @@ float get_right_pix(__global __read_only float *labels,
            int w, int h,
            int x, int y);
 
+
 // for given point in buffer, make sure it is within bounds of workgroup
 
-//float get_right_pix(__global __read_only float *gpu_in,
-//           int w, int h,
-//           int curr_x, int curr_y) {
-//    if (curr_x < 0) {
-//        curr_x = 0;
-//    }
-//    if (curr_x > w-1) {
-//        curr_x = w-1;
-//    }
-//    if (curr_y < 0) {
-//        curr_y = 0;
-//    }
-//    if (curr_y > h-1) {
-//        curr_y = h-1;
-//    }
-//    return gpu_in[curr_y * w + curr_x];
-//}
-
-float
-get_right_pix(__global __read_only float *gpu_in,
-                  int w, int h,
-                  int x, int y)
-{
-    if ((x < 0) || (x >= w) || (y < 0) || (y >= h))
-        return w * h;
-    return gpu_in[y * w + x];
+float get_right_pix(__global __read_only float *gpu_in,
+           int w, int h,
+           int curr_x, int curr_y) {
+    if (curr_x < 0) {
+        curr_x = 0;
+    }
+    if (curr_x > w-1) {
+        curr_x = w-1;
+    }
+    if (curr_y < 0) {
+        curr_y = 0;
+    }
+    if (curr_y > h-1) {
+        curr_y = h-1;
+    }
+    return gpu_in[curr_y * w + curr_x];
 }
 
 
@@ -50,8 +41,6 @@ mask(__global __read_only float *gpu_in,
                  const int halo)
 {
     // halo is the additional number of cells in one direction
-
-    printf("(%d,%d) ", 'Die');
 
     // Global position of output pixel
     const int x = get_global_id(0);
@@ -87,6 +76,8 @@ mask(__global __read_only float *gpu_in,
         }
     }
 
+
+
     // Make sure all threads reach the next part after
     // the local buffer is loaded
     barrier(CLK_LOCAL_MEM_FENCE);
@@ -98,10 +89,6 @@ mask(__global __read_only float *gpu_in,
 
     if ((y < h-1)  && (x < w-1) && (x>0) && (y>0)) {
 
-        if (y<5 && x<5){
-            printf("(%d,%d) ", buf_x, buf_y);
-        }
-
         float out_val = buffer[(buf_y - 1)*buf_w + buf_x - 1] * gpu_mask[8] +
                   buffer[(buf_y - 1)*buf_w + buf_x] * gpu_mask[7] +
                   buffer[(buf_y - 1)*buf_w + buf_x + 1] * gpu_mask[6] +
@@ -112,14 +99,6 @@ mask(__global __read_only float *gpu_in,
                   buffer[(buf_y + 1)*buf_w + buf_x] * gpu_mask[1] +
                   buffer[(buf_y + 1)*buf_w + buf_x + 1] * gpu_mask[0];
 
-
-
-        //printf("%f", out_val);
-
-        //printf(buffer);
-        //printf(gpu_mask);
-        //printf(buf_x);
-        //printf(buf_y);
 
         gpu_out[y*w+x] = out_val;
 

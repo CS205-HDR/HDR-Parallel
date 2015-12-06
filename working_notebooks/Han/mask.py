@@ -47,14 +47,14 @@ if __name__ == '__main__':
                             properties=cl.command_queue_properties.PROFILING_ENABLE)
     print 'The queue is using the device:', queue.device.name
 
-    program = cl.Program(context, open('HDR_mask.cl').read()).build(options='')
+    program = cl.Program(context, open('mask.cl').read()).build(options='')
 
-    im0 = scipy.misc.imread('test.jpg', flatten=True)
+    im0 = scipy.misc.imread('pic.jpg', flatten=True)
     him0 = im0.copy()
     him0 = np.array(him0, dtype=np.float32)
 
 
-    print him0
+    #print him0
     # get size of him0
     #im_x, im_y = him0.shape
 
@@ -76,17 +76,26 @@ if __name__ == '__main__':
     # sb = (1 - s) * lumB
     # create mask matrix
     #mask = [[sr+s, sr, sr], [sg, sg+s, sg], [sb, sb, sb+s]].astype(np.float32)
-    # sharpen
-    #mask = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]]).astype(np.float32)
+
+
+    # Original
     #mask = np.array([[0, 0, 0], [0, 1, 0], [0, 0, 0]]).astype(np.float32)
+    # sharpen
+    #mask = np.array([[0, -1, 0], [-1, 4, -1], [0, -1, 0]]).astype(np.float32)
+    # Box blur
+    mask = (1/9) * np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]]).astype(np.float32)
+    # Edge detection
+    #mask = np.array([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]]).astype(np.float32)
+    # Edge detection2
+    #mask = np.array([[0, 1, 0], [1, -4, 1], [0, 1, 0]]).astype(np.float32)
+    # Gaussian blur
+    #mask = (1/16)*np.array([[1, 2, 1], [2, 4, 2], [1, 2, 1]]).astype(np.float32)
 
-    # edge detection
-    mask = np.array([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]]).astype(np.float32)
 
-    print mask
+    #print mask
     #print 'mask shape: ', mask.shape
 
-    #saturation = s*np.ones_like(him0).astype(np.float32)
+
 
     out = np.zeros_like(him0).astype(np.float32)
 
@@ -120,14 +129,6 @@ if __name__ == '__main__':
                                gpu_0, gpu_mask, gpu_out, local_memory,
                                 width, height, buf_size[0], buf_size[1], halo)
 
-    #
-    # mask(__global __read_only float *gpu_in,
-    #              __global __read_only float *gpu_mask,
-    #              __global __write_only float *gpu_out,
-    #              __local float *buffer,
-    #              int w, int h,
-    #              int buf_w, int buf_h,
-    #              const int halo)
 
 
     cl.enqueue_copy(queue, out, gpu_out, is_blocking=True)
@@ -137,12 +138,8 @@ if __name__ == '__main__':
     print 'seconds: ',seconds
 
 
-    print out
+    #print out
 
-    print "----------------"
-    print him0[4:10, 4:10]
-    print out[4:10, 4:10]
-    print "----------------"
 
     #out = np.reshape(out, (612,816,3)).astype(np.uint8)
     #out_f = Image.fromarray(out, 'RGB')
