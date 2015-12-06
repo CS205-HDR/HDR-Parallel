@@ -1,4 +1,3 @@
-
 // improvement of convolution
 
 
@@ -112,18 +111,17 @@ mask(__global __read_only float *gpu_in,
     //if ((y < h) && (x < w)) {
 
 
-    if ((y < h-1)  && (x < w-1) && (x>0) && (y>0)) {
+    if ((y < h - 1)  && (x < w - 1) && (x > 0) && (y > 0)) {
 
-        float out_val = buffer[(buf_y - 1)*buf_w + buf_x - 1] * buffer[idx_mask+8] +
-                  buffer[(buf_y - 1)*buf_w + buf_x] * buffer[idx_mask+7] +
-                  buffer[(buf_y - 1)*buf_w + buf_x + 1] * buffer[idx_mask+6] +
-                  buffer[buf_y*buf_w + buf_x - 1] * buffer[5] +
-                  buffer[buf_y*buf_w + buf_x] * buffer[idx_mask+4] +
-                  buffer[buf_y*buf_w + buf_x + 1] * buffer[idx_mask+3] +
-                  buffer[(buf_y + 1)*buf_w + buf_x - 1] * buffer[idx_mask+2] +
-                  buffer[(buf_y + 1)*buf_w + buf_x] * buffer[idx_mask+1] +
+        float out_val = buffer[(buf_y - 1)*buf_w + buf_x - 1] * buffer[idx_mask + 8] +
+                  buffer[(buf_y - 1)*buf_w + buf_x] * buffer[idx_mask + 7] +
+                  buffer[(buf_y - 1)*buf_w + buf_x + 1] * buffer[idx_mask + 6] +
+                  buffer[buf_y*buf_w + buf_x - 1] * buffer[idx_mask + 5] +
+                  buffer[buf_y*buf_w + buf_x] * buffer[idx_mask + 4] +
+                  buffer[buf_y*buf_w + buf_x + 1] * buffer[idx_mask + 3] +
+                  buffer[(buf_y + 1)*buf_w + buf_x - 1] * buffer[idx_mask + 2] +
+                  buffer[(buf_y + 1)*buf_w + buf_x] * buffer[idx_mask + 1] +
                   buffer[(buf_y + 1)*buf_w + buf_x + 1] * buffer[idx_mask];
-
 
 
         gpu_out[y * w + x] = out_val;

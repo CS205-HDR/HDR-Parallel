@@ -6,6 +6,7 @@ float get_right_pix(__global __read_only float *labels,
            int w, int h,
            int x, int y);
 
+
 // for given point in buffer, make sure it is within bounds of workgroup
 
 float get_right_pix(__global __read_only float *gpu_in,
@@ -27,17 +28,6 @@ float get_right_pix(__global __read_only float *gpu_in,
 }
 
 
-//float
-//get_right_pix(__global __read_only float *gpu_in,
-//                  int w, int h,
-//                  int x, int y)
-//{
-//    if ((x < 0) || (x >= w) || (y < 0) || (y >= h))
-//        return w * h;
-//    return gpu_in[y * w + x];
-//}
-
-
 
 
 
@@ -51,8 +41,6 @@ mask(__global __read_only float *gpu_in,
                  const int halo)
 {
     // halo is the additional number of cells in one direction
-
-    //printf("(%d,%d) ", 'Die');
 
     // Global position of output pixel
     const int x = get_global_id(0);

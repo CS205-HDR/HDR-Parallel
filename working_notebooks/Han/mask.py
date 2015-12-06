@@ -49,7 +49,7 @@ if __name__ == '__main__':
 
     program = cl.Program(context, open('mask.cl').read()).build(options='')
 
-    im0 = scipy.misc.imread('test.jpg', flatten=True)
+    im0 = scipy.misc.imread('pic.jpg', flatten=True)
     him0 = im0.copy()
     him0 = np.array(him0, dtype=np.float32)
 
@@ -76,17 +76,26 @@ if __name__ == '__main__':
     # sb = (1 - s) * lumB
     # create mask matrix
     #mask = [[sr+s, sr, sr], [sg, sg+s, sg], [sb, sb, sb+s]].astype(np.float32)
-    # sharpen
-    #mask = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]]).astype(np.float32)
-    mask = np.array([[0, 0, 0], [0, 1, 0], [0, 0, 0]]).astype(np.float32)
 
-    # edge detection
+
+    # Original
+    #mask = np.array([[0, 0, 0], [0, 1, 0], [0, 0, 0]]).astype(np.float32)
+    # sharpen
+    #mask = np.array([[0, -1, 0], [-1, 4, -1], [0, -1, 0]]).astype(np.float32)
+    # Box blur
+    mask = (1/9) * np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]]).astype(np.float32)
+    # Edge detection
     #mask = np.array([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]]).astype(np.float32)
+    # Edge detection2
+    #mask = np.array([[0, 1, 0], [1, -4, 1], [0, 1, 0]]).astype(np.float32)
+    # Gaussian blur
+    #mask = (1/16)*np.array([[1, 2, 1], [2, 4, 2], [1, 2, 1]]).astype(np.float32)
+
 
     #print mask
     #print 'mask shape: ', mask.shape
 
-    #saturation = s*np.ones_like(him0).astype(np.float32)
+
 
     out = np.zeros_like(him0).astype(np.float32)
 
