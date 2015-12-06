@@ -1,9 +1,15 @@
 
+# This is the basic non-buffer version of mask
+
 from __future__ import division
 import pyopencl as cl
 import numpy as np
-import pylab
 from PIL import Image
+import pylab
+import matplotlib.pyplot as plt
+import scipy
+from scipy import ndimage
+
 
 def round_up(global_size, group_size):
     r = global_size % group_size
@@ -14,6 +20,7 @@ def round_up(global_size, group_size):
 
 if __name__ == '__main__':
     # List our platforms
+
     platforms = cl.get_platforms()
     print 'The platforms detected are:'
     print '---------------------------'
@@ -36,61 +43,59 @@ if __name__ == '__main__':
     context = cl.Context(devices)
     print 'This context is associated with ', len(context.devices), 'devices'
 
-    # Create a queue for transferring data and launching computations.
-    # Turn on profiling to allow us to check event times.
     queue = cl.CommandQueue(context, context.devices[0],
                             properties=cl.command_queue_properties.PROFILING_ENABLE)
     print 'The queue is using the device:', queue.device.name
 
-    program = cl.Program(context, open('hdr.cl').read()).build(options='')
+    program = cl.Program(context, open('mask_basic.cl').read()).build(options='')
 
 
-    im0 = np.array(Image.open("orig_0.jpg").getdata())
-    him0 = im0.astype(np.float32).copy()
-    im1 = np.array(Image.open("orig_1.jpg").getdata())
-    him1 = im1.astype(np.float32).copy()
-    im2 = np.array(Image.open("orig_2.jpg").getdata())
-    him2 = im2.astype(np.float32).copy()
-    im3 = np.array(Image.open("orig_3.jpg").getdata())
-    him3 = im3.astype(np.float32).copy()
+    im0 = scipy.misc.imread('test.jpg', flatten=True)
+    him0 = im0.copy()
+    him0 = np.array(him0, dtype=np.float32)
+    print him0
+    #mask = np.array([[0, 0, 0], [0, 1, 0], [0, 0, 0]]).astype(np.float32)
+    # sharpen
+    # mask = np.array([[0, -1, 0], [-1, 4, -1], [0, -1, 0]]).astype(np.float32)
+    # Box blur
+    #mask = (1/9) * np.array([[1, 1, 1], [1, 1, 1], [1, 1, 1]]).astype(np.float32)
+    mask = np.array([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]]).astype(np.float32)
 
-    out = np.empty_like(him0)
 
+    print mask
+    out = np.zeros_like(him0).astype(np.float32)
     gpu_0 = cl.Buffer(context, cl.mem_flags.READ_ONLY, him0.size * 4)
-    gpu_1 = cl.Buffer(context, cl.mem_flags.READ_ONLY, him1.size * 4)
-    gpu_2 = cl.Buffer(context, cl.mem_flags.READ_ONLY, him2.size * 4)
-    gpu_3 = cl.Buffer(context, cl.mem_flags.READ_ONLY, him3.size * 4)
-    gpu_out = cl.Buffer(context, cl.mem_flags.WRITE_ONLY, him0.size * 4)
+    gpu_out = cl.Buffer(context, cl.mem_flags.WRITE_ONLY, out.size * 4)
+    # gpu of mask
+    gpu_mask = cl.Buffer(context, cl.mem_flags.READ_ONLY, mask.size * 4)
+
+    cl.enqueue_copy(queue, gpu_0, him0, is_blocking=False)
+    cl.enqueue_copy(queue, gpu_mask, mask, is_blocking=False)
+
 
     local_size = (8, 8)  # 64 pixels per work group
     global_size = tuple([round_up(g, l) for g, l in zip(him0.shape[::-1], local_size)])
 
-    print him0.shape
-    width = np.int32(him0.shape[1])
-    height = np.int32(him0.shape[0])
+    width = np.int32(him0.shape[1]) # 3
+    height = np.int32(him0.shape[0]) # 499392
 
-    #max_iters = np.int32(1024)
 
-    cl.enqueue_copy(queue, gpu_0, him0, is_blocking=False)
-    cl.enqueue_copy(queue, gpu_1, him1, is_blocking=False)
-    cl.enqueue_copy(queue, gpu_2, him2, is_blocking=False)
-    cl.enqueue_copy(queue, gpu_3, him3, is_blocking=False)
-
-    event = program.hdr(queue, global_size, local_size,
-                               gpu_0, gpu_1, gpu_2, gpu_3, gpu_out,
-                               width, height)
+    event = program.mask_nobuffer(queue, global_size, local_size,
+                               gpu_0, gpu_mask, gpu_out,
+                               width, height, np.int32(mask.shape[1]), np.int32(mask.shape[0]))
 
     cl.enqueue_copy(queue, out, gpu_out, is_blocking=True)
 
     seconds = (event.profile.end - event.profile.start) / 1e9
-    print("{} Million Complex FMAs in {} seconds, {} million Complex FMAs / second".format(out.sum() / 1e6, seconds, (out.sum() / seconds) / 1e6))
+    print 'Seconds: ', seconds
 
 
-    id_comp2 = np.reshape(out, (612,816,3)).astype(np.uint8)
-    print 'shape', id_comp2.shape
-    print id_comp2[:20]
-    im_comp = Image.fromarray(id_comp2, 'RGB')
+    print "----------------"
+    print him0[4:10, 4:10]
+    print out[4:10, 4:10]
+    print "----------------"
 
-    print 'shape', id_comp2.shape
-    print id_comp2[:20]
-    im_comp.show()
+
+    print out
+    pylab.imshow(out, cmap=plt.cm.gray)
+    pylab.show()

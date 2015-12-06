@@ -1,4 +1,6 @@
 
+# This is the mask adding version per pixel
+
 from __future__ import division
 import pyopencl as cl
 import numpy as np
@@ -42,33 +44,34 @@ if __name__ == '__main__':
                             properties=cl.command_queue_properties.PROFILING_ENABLE)
     print 'The queue is using the device:', queue.device.name
 
-    program = cl.Program(context, open('hdr.cl').read()).build(options='')
+    program = cl.Program(context, open('HDR_mask.cl').read()).build(options='')
 
-    img_size = Image.open("test_large.jpg").size
+    # get the shape of an image
+    # im_y, im_x = Image.open("orig_0.jpg").size
 
-    # im0 = np.array(Image.open("test_large.jpg").getdata())
-    # him0 = im0.astype(np.float32).copy()
-    img_size = Image.open("../0-opencl-naive/orig_0.jpg").size
-
-    im0 = np.array(Image.open("../0-opencl-naive/orig_0.jpg").getdata())
+    im0 = np.array(Image.open("orig_0.jpg").getdata())
     him0 = im0.astype(np.float32).copy()
-    im1 = np.array(Image.open("../0-opencl-naive/orig_1.jpg").getdata())
+    im1 = np.array(Image.open("orig_1.jpg").getdata())
     him1 = im1.astype(np.float32).copy()
-    im2 = np.array(Image.open("../0-opencl-naive/orig_2.jpg").getdata())
+    im2 = np.array(Image.open("orig_2.jpg").getdata())
     him2 = im2.astype(np.float32).copy()
-    im3 = np.array(Image.open("../0-opencl-naive/orig_3.jpg").getdata())
+    im3 = np.array(Image.open("orig_3.jpg").getdata())
     him3 = im3.astype(np.float32).copy()
 
-    # Saturation mask
-    lumR = 0.2125
-    lumG = 0.7154
-    lumB = 0.0721
+    print 'him0 shape: ', him0.shape
+
+
+    # create a mask array
+    #mask = np.zeros(shape=(612*612, 3))
+    #for i in range(612):
+    #    mask[612*i+i,:]=0.5
+
+    # mask that takes 1/2 for each pixel
+    mask = 0.5*np.ones(shape=(499392, 3)).astype(np.float32)
+    print 'mask shape: ', mask.shape
     # saturation parameter
     s = 1.4
-    sr = (1 - s) * lumR
-    sg = (1 - s) * lumG
-    sb = (1 - s) * lumB
-    s_mask = np.array([[sr + s, sr, sr], [sg, sg + s, sg], [sb, sb, sb+s]]).astype(np.float32)
+    saturation = s*np.ones(shape=(499392, 3)).astype(np.float32)
 
     out = np.empty_like(him0)
 
@@ -77,39 +80,42 @@ if __name__ == '__main__':
     gpu_2 = cl.Buffer(context, cl.mem_flags.READ_ONLY, him2.size * 4)
     gpu_3 = cl.Buffer(context, cl.mem_flags.READ_ONLY, him3.size * 4)
     gpu_out = cl.Buffer(context, cl.mem_flags.WRITE_ONLY, him0.size * 4)
+    # gpu of mask
+    gpu_mask = cl.Buffer(context, cl.mem_flags.WRITE_ONLY, him0.size * 4)
+    # gpu of saturation
+    gpu_sat = cl.Buffer(context, cl.mem_flags.WRITE_ONLY, him0.size * 4)
 
-    gpu_mask = cl.Buffer(context, cl.mem_flags.READ_ONLY, s_mask.size * 4)
 
     local_size = (8, 8)  # 64 pixels per work group
     global_size = tuple([round_up(g, l) for g, l in zip(him0.shape[::-1], local_size)])
 
-    print him0.shape
-    width = np.int32(him0.shape[1])
-    height = np.int32(him0.shape[0])
+    width = np.int32(him0.shape[1]) # 3
+    height = np.int32(him0.shape[0]) # 499392
 
-    #max_iters = np.int32(1024)
 
     cl.enqueue_copy(queue, gpu_0, him0, is_blocking=False)
     cl.enqueue_copy(queue, gpu_1, him1, is_blocking=False)
     cl.enqueue_copy(queue, gpu_2, him2, is_blocking=False)
     cl.enqueue_copy(queue, gpu_3, him3, is_blocking=False)
+    cl.enqueue_copy(queue, gpu_mask, mask, is_blocking=False)
+    cl.enqueue_copy(queue, gpu_sat, saturation, is_blocking=False)
 
-    cl.enqueue_copy(queue, gpu_mask, s_mask, is_blocking=False)
 
     event = program.hdr(queue, global_size, local_size,
-                            gpu_0, gpu_1, gpu_2, gpu_3, gpu_mask, gpu_out,
-                           width, height)
+                               gpu_0, gpu_1, gpu_2, gpu_3, gpu_out, gpu_mask, gpu_sat,
+                               width, height)
+
     cl.enqueue_copy(queue, out, gpu_out, is_blocking=True)
 
     seconds = (event.profile.end - event.profile.start) / 1e9
-    print("Global mask performance: {} Million Complex FMAs in {} seconds, {} million Complex FMAs / second".format(out.sum() / 1e6, seconds, (out.sum() / seconds) / 1e6))
+    print("{} Million Complex FMAs in {} seconds, {} million Complex FMAs / second".format(out.sum() / 1e6, seconds, (out.sum() / seconds) / 1e6))
 
 
-    id_comp2 = np.reshape(out, (img_size[1],img_size[0],3)).astype(np.uint8)
-    # print 'shape', id_comp2.shape
-    # print id_comp2[:20]
+    id_comp2 = np.reshape(out, (612,816,3)).astype(np.uint8)
+    print 'shape', id_comp2.shape
+    #print id_comp2[:20]
     im_comp = Image.fromarray(id_comp2, 'RGB')
 
-    # print 'shape', id_comp2.shape
-    # print id_comp2[:20]
+    print 'shape', id_comp2.shape
+    #print id_comp2[:20]
     im_comp.show()

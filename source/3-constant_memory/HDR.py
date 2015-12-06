@@ -106,10 +106,10 @@ if __name__ == '__main__':
 
 
     id_comp2 = np.reshape(out, (img_size[1],img_size[0],3)).astype(np.uint8)
-    print 'shape', id_comp2.shape
+    # print 'shape', id_comp2.shape
     # print id_comp2[:20]
     im_comp = Image.fromarray(id_comp2, 'RGB')
 
-    print 'shape', id_comp2.shape
+    # print 'shape', id_comp2.shape
     # print id_comp2[:20]
     im_comp.show()

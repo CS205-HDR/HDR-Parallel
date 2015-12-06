@@ -96,8 +96,11 @@ if __name__ == '__main__':
 
     cl.enqueue_copy(queue, gpu_mask, s_mask, is_blocking=False)
 
+    buf_size = (np.int32(s_mask.shape[0]), np.int32(s_mask.shape[1]))
+    local_memory = cl.LocalMemory(4 * buf_size[0] * buf_size[1])
+
     event = program.hdr(queue, global_size, local_size,
-                            gpu_0, gpu_1, gpu_2, gpu_3, gpu_mask, gpu_out,
+                            gpu_0, gpu_1, gpu_2, gpu_3, gpu_mask, gpu_out, local_memory,
                            width, height)
     cl.enqueue_copy(queue, out, gpu_out, is_blocking=True)
 
@@ -106,10 +109,10 @@ if __name__ == '__main__':
 
 
     id_comp2 = np.reshape(out, (img_size[1],img_size[0],3)).astype(np.uint8)
-    print 'shape', id_comp2.shape
+    # print 'shape', id_comp2.shape
     # print id_comp2[:20]
     im_comp = Image.fromarray(id_comp2, 'RGB')
 
-    print 'shape', id_comp2.shape
+    # print 'shape', id_comp2.shape
     # print id_comp2[:20]
     im_comp.show()
