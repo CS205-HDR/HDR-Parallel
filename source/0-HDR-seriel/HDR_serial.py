@@ -148,7 +148,7 @@ class hdr:
         adjacent images
         """
         masks = self.get_masks(imgs)
-        imx = lambda i:Image.composite(imgs[i], imgs[i+1], masks[i])
+        imx = lambda i:Image.composite(imgs[i],imgs[i+1],masks[i])
         return [imx(i) for i in range(len(masks))]
 
 
@@ -230,6 +230,6 @@ class hdr:
 
 if __name__ == '__main__':
     start = time.time()
-    proj = hdr(case='2_room', resize=.5, img_type='jpg', cur_dir=r'/Users/Elena/Desktop/CS205/Final/HDR-Parallel/testing_images/')
+    proj = hdr(case='3_lake', resize=1.0, img_type='jpg', cur_dir=r'../../testing_images')
     proj.get_hdr(strength=[0.,1.,2.],naturalness=[0.8,0.9,1.0])
     print 'Total time:', time.time() - start

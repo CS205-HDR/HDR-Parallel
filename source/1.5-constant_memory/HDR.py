@@ -44,25 +44,25 @@ if __name__ == '__main__':
 
     program = cl.Program(context, open('hdr.cl').read()).build(options='')
 
-    # img_size = Image.open("../../testing_images/1_tree/Tree_1.jpg").size
-    #
-    # im0 = np.array(Image.open("../../testing_images/1_tree/Tree_1.jpg").getdata())
-    # him0 = im0.astype(np.float32).copy()
-    # im1 = np.array(Image.open("../../testing_images/1_tree/Tree_2.jpg").getdata())
-    # him1 = im1.astype(np.float32).copy()
-    # im2 = np.array(Image.open("../../testing_images/1_tree/Tree_3.jpg").getdata())
-    # him2 = im2.astype(np.float32).copy()
-    # im3 = np.array(Image.open("../0-opencl-naive/orig_3.jpg").getdata())
-    # him3 = im3.astype(np.float32).copy()
+    img_size = Image.open("../../testing_images/3_lake/lake_1.jpg").size
 
-    img_size = Image.open("../0-opencl-naive/orig_0.jpg").size
-
-    im0 = np.array(Image.open("../0-opencl-naive/orig_0.jpg").getdata())
+    im0 = np.array(Image.open("../../testing_images/3_lake/lake_1.jpg").getdata())
     him0 = im0.astype(np.float32).copy()
-    im1 = np.array(Image.open("../0-opencl-naive/orig_1.jpg").getdata())
+    im1 = np.array(Image.open("../../testing_images/3_lake/lake_2.jpg").getdata())
     him1 = im1.astype(np.float32).copy()
-    im2 = np.array(Image.open("../0-opencl-naive/orig_2.jpg").getdata())
+    im2 = np.array(Image.open("../../testing_images/3_lake/lake_3.jpg").getdata())
     him2 = im2.astype(np.float32).copy()
+
+    # Saturation mask
+    lumR = 0.2125
+    lumG = 0.7154
+    lumB = 0.0721
+    # saturation parameter
+    s = 1.4
+    sr = (1 - s) * lumR
+    sg = (1 - s) * lumG
+    sb = (1 - s) * lumB
+    s_mask = np.array([[sr + s, sr, sr], [sg, sg + s, sg], [sb, sb, sb+s]]).astype(np.float32)
 
     out = np.empty_like(him0)
 
@@ -71,6 +71,8 @@ if __name__ == '__main__':
     gpu_2 = cl.Buffer(context, cl.mem_flags.READ_ONLY, him2.size * 4)
     # gpu_3 = cl.Buffer(context, cl.mem_flags.READ_ONLY, him3.size * 4)
     gpu_out = cl.Buffer(context, cl.mem_flags.WRITE_ONLY, him0.size * 4)
+
+    gpu_mask = cl.Buffer(context, cl.mem_flags.READ_ONLY, s_mask.size * 4)
 
     local_size = (8, 8)  # 64 pixels per work group
     global_size = tuple([round_up(g, l) for g, l in zip(him0.shape[::-1], local_size)])
@@ -84,21 +86,20 @@ if __name__ == '__main__':
     cl.enqueue_copy(queue, gpu_0, him0, is_blocking=False)
     cl.enqueue_copy(queue, gpu_1, him1, is_blocking=False)
     cl.enqueue_copy(queue, gpu_2, him2, is_blocking=False)
-    # cl.enqueue_copy(queue, gpu_3, him3, is_blocking=False)
+
+    cl.enqueue_copy(queue, gpu_mask, s_mask, is_blocking=False)
 
     event = program.hdr(queue, global_size, local_size,
-                               gpu_0, gpu_1, gpu_2, gpu_out,
-                               width, height)
-
+                            gpu_0, gpu_1, gpu_2, gpu_mask, gpu_out,
+                           width, height)
     cl.enqueue_copy(queue, out, gpu_out, is_blocking=True)
 
     seconds = (event.profile.end - event.profile.start) / 1e9
-    print("{} Million Complex FMAs in {} seconds, {} million Complex FMAs / second".format(out.sum() / 1e6, seconds, (out.sum() / seconds) / 1e6))
+    print("constant mask performance :{} Million Complex FMAs in {} seconds, {} million Complex FMAs / second".format(out.sum() / 1e6, seconds, (out.sum() / seconds) / 1e6))
 
 
     id_comp2 = np.reshape(out, (img_size[1],img_size[0],3)).astype(np.uint8)
-    # print 'shape', id_comp2.shape
-    # print id_comp2[:20]
+
     im_comp = Image.fromarray(id_comp2, 'RGB')
 
     # print 'shape', id_comp2.shape

@@ -2,17 +2,10 @@ __kernel void
 hdr(__global __read_only float *gpu_0,
            __global __read_only float *gpu_1,
            __global __read_only float *gpu_2,
-           __global __read_only float *gpu_3,
-           __global __read_only float *gpu_mask,
+           __constant __read_only float *gpu_mask,
            __global __write_only float *gpu_out,
-           __local float *buffer,
            int w, int h)
 {
-    for(int i = 0; i < 3; i++){
-        for(int j = 0; j < 3; j++){
-            buffer[i * 3 + j] = gpu_mask[i * 3 + j];
-        }
-    }
     // Global position of output pixel
     const int x = get_global_id(0);
     const int y = get_global_id(1);
@@ -58,24 +51,13 @@ hdr(__global __read_only float *gpu_0,
 
     int curr2 = gpu_2[index] * a2;
 
-    float r3 = gpu_3[y * w];
-    float g3 = gpu_3[y * w + 1];
-    float b3 = gpu_3[y * w + 2];
-
-    float l3 = (min(min(r3, g3), b3) + max(max(r3, g3), b3)) * 0.5f;
-    l3 /= 255.0f;
-    float a3 = l3 - 0.5f;
-    a3 = exp(-(a3 * a3)/1.0f);
-
-    int curr3 = gpu_3[index] * a3;
-
     weight = a0 + a1 + a2;
 
     gpu_out[index] = (curr0 + curr1 + curr2) / weight;
 
     if ((x < w) && (y < h)) {
 
-        gpu_out[w*y+x] = (gpu_0[w*y+x]+gpu_1[w*y+x]+gpu_2[w*y+x]+gpu_3[w*y+x])/4;
+        gpu_out[w*y+x] = (gpu_0[w*y+x]+gpu_1[w*y+x]+gpu_2[w*y+x])/4;
     }
 
     //Saturation mask
@@ -83,7 +65,7 @@ hdr(__global __read_only float *gpu_0,
     if( (x < w) && (y <h)){
         tmp = 0.0f;
         for(int k = 0; k < 3; k++){
-            tmp += gpu_out[y * w + k] * buffer[k * 3 + x];
+            tmp += gpu_out[y * w + k] * gpu_mask[k * 3 + x];
         }
     }
     gpu_out[index] = tmp;

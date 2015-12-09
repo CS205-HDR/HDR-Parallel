@@ -1,26 +1,28 @@
-Part 1 (Qing):
 
-1. Seriel:
-Total time: 3.66300392151
+1. python packages needed before execution:
+    1) PIL
+    2) pyopencl
+    3) numpy
 
-2. Naive:
-194.435568 Million Complex FMAs in 0.00650464 seconds, 29891.8261426 million Complex FMAs / second
+2. Part 0: HDR Serial Implementation
 
-3.Advanced:
-151.77144 Million Complex FMAs in 0.01156432 seconds, 13124.1127883 million Complex FMAs / second
+    Program Folder/Files: 0-HDR-serial/HDR_serial.py
 
-4.Saturation
-Global mask performance: 193.05512 Million Complex FMAs in 0.0153812 seconds, 12551.369204 million Complex FMAs / second
-Global mask performance: 193.05512 Million Complex FMAs in 0.01549448 seconds, 12459.6062598 million Complex FMAs / second
+    For default testing images, you can run the program directly. If you would like to try different images set, replace the 'case'
+    and 'cur_dir' values in line: "proj = hdr(case='3_lake', resize=1.0, img_type='jpg', cur_dir=r'../../testing_images')" under main function\
+    where 'case' is the folder name where the images are stored and 'cur_dir' is the file path of 'case'.
 
-5.Constant Memory
-constant mask performance :193.05512 Million Complex FMAs in 0.01542168 seconds, 12518.4234143 million Complex FMAs / second
-constant mask performance :193.05512 Million Complex FMAs in 0.01530536 seconds, 12613.5628303 million Complex FMAs / second
+3. Part 1 HDR Image Processing:
+    Program Folders(5 steps of optimization): 1.1 xxx through 1.5 xxx
+    Program Files:
+        HDR.py: python driver for opencl
+        hdr.cl: opencl implementation for parallel HDR image processing
 
-6. Local Buffer
-constant mask performance :193.05512 Million Complex FMAs in 0.0181116 seconds, 10659.1974204 million Complex FMAs / second
-constant mask performance :193.05512 Million Complex FMAs in 0.01813864 seconds, 10643.3073262 million Complex FMAs / second
+    For default testing images, you can run the program directly. All the testing images are stored under '/testing_images' directory.
+    If you want to test other images instead of the default 'lake', be sure to change all the file path in HDR.py file.
 
+    Note: the execution may take several minutes because of loading large images.
+    
 Part 3 (Haosu)
 
 Part 2 (Xinyan)
